@@ -1,0 +1,46 @@
+---
+title: "Peer Assessment 1"
+author: "Sergio Siqueira"
+date: "August 9, 2014"
+output: html_document
+---
+
+This Reproducible Research Coursera course first assessment is based on data from Activity Monitoring Data file on the Github repository. The original file is compressed so it needs to be 'unzipped' to the R Studio working directory before load the .csv data file into the R environment to be processed.
+
+The following code will perform these three steps:  
+- Check if the file is into working directory, if not: issue a message, if yes, then  
+- Uncompress the file into the same directory  
+- Load the .csv file into R Studio
+
+```{r, echo = TRUE}
+## Check if file exists in working directory, if not then print a message asking to download the file to current WD
+if (!file.exists("activity.zip")) {
+      print("File 'activity.zip' does not exist in working directory, please download the file")
+}
+
+## Unzip the file, load into R and make sure date format
+unzip("activity.zip")
+activity <- read.csv("activity.csv", header = T, sep = ",")
+activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
+```
+
+Once data is loaded, NA values are removed from 'steps' and then create the histogram
+
+```{r, echo = TRUE}
+## Sum of steps per day while removing NA values
+i <- 1
+while(i <= nrow(activity)) {
+      stepsperday[i,2] <- activity$date[i]
+      for
+}
+
+navalues <- is.na(activity$steps)
+steps <- activity$steps[!navalues]
+hist(steps)
+abline(v = mean(steps), col = "red", lwd = 2)
+abline(v = median(steps), col = "blue", lwd = 2)
+legend("topright", c(paste("Mean =  ", round(mean(steps))), paste("Median = ", median(steps))), 
+       col = c("red", "blue"), lwd = 2)
+```
+
+
