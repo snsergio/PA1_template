@@ -10,7 +10,7 @@ This Reproducible Research Coursera course first assessment is based on data fro
 The following code will perform these three steps:  
 - Check if the file is into working directory, if not: issue a message, if yes, then  
 - Uncompress the file into the same directory  
-- Load the .csv file into R Studio
+- Load the .csv file into R Studio and assure the date format
 
 ```{r, echo = TRUE}
 ## Check if file exists in working directory, if not then print a message asking to download the file to current WD
@@ -24,22 +24,15 @@ activity <- read.csv("activity.csv", header = T, sep = ",")
 activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
 ```
 
-Once data is loaded, NA values are removed from 'steps' and then create the histogram
+Once data is loaded, steps are sum for each day, discarding the 'NA' values
 
 ```{r, echo = TRUE}
 ## Sum of steps per day while removing NA values
-i <- 1
-while(i <= nrow(activity)) {
-      stepsperday[i,2] <- activity$date[i]
-      for
-}
-
-navalues <- is.na(activity$steps)
-steps <- activity$steps[!navalues]
-hist(steps)
-abline(v = mean(steps), col = "red", lwd = 2)
-abline(v = median(steps), col = "blue", lwd = 2)
-legend("topright", c(paste("Mean =  ", round(mean(steps))), paste("Median = ", median(steps))), 
+steps_day <- rowsum(activity$steps, activity$date, reorder = F, na.rm = T)
+hist(steps_day, main = "Histogram of Steps per Day")
+abline(v = mean(steps_day), col = "red", lwd = 2)
+abline(v = median(steps_day), col = "blue", lwd = 2)
+legend("topright", c(paste("Mean    =   ", round(mean(steps_day))), paste("Median = ", median(steps_day))), 
        col = c("red", "blue"), lwd = 2)
 ```
 
