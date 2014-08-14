@@ -24,7 +24,7 @@ activity <- read.csv("activity.csv", header = T, sep = ",")
 activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
 ```
 
-Once data is loaded, steps are sum for each day, discarding the 'NA' values
+Once data is loaded, sum steps for each day and discard the 'NA' values
 
 ```{r, echo = TRUE}
 ## Sum of steps per day while removing NA values
@@ -36,4 +36,17 @@ legend("topright", c(paste("Mean    =   ", round(mean(steps_day))), paste("Media
        col = c("red", "blue"), lwd = 2)
 ```
 
+Now plot the time series: steps mean by 5-minute intervals on each day
+
+```{r, echo = TRUE}
+# Removing NA from steps in activity dataframe
+na_steps <- is.na(activity$steps)
+aux_activity <- activity
+aux_activity <- aux_activity[!na_steps, , ]
+interval_steps <- split(aux_activity$steps, aux_activity$interval)
+mean_steps <- lapply(interval_steps, mean)
+max_value <- max(unlist(lapply(mean_steps, max)))
+plot(names(mean_steps), mean_steps, type = "l", main = "Mean steps per interval",
+     sub = paste("Maximum mean steps = ", max_value), xlab = "Time Intervals", ylab = "Mean steps")
+```
 
