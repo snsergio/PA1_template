@@ -1,20 +1,104 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: "Peer Assessment 1"
+author: "Sergio Siqueira"
+date: "August 9, 2014"
+output: html_document
+---
 
+This Reproducible Research Coursera course first assessment is based on data from Activity Monitoring Data file on the Github repository. The original file is compressed so it needs to be 'unzipped' to the R Studio working directory before load the .csv data file into the R environment to be processed.
 
-## Loading and preprocessing the data
+The following code will perform these three steps:  
+- Check if the file is into working directory, if not: issue a message, if yes, then  
+- Uncompress the file into the same directory  
+- Load the .csv file into R Studio and assure the date format
 
+```{r, echo=TRUE}
+## Check if file exists in working directory, if not then print a message asking to download the file to current WD
+if (!file.exists("activity.zip")) {
+      print("File 'activity.zip' does not exist in working directory, please download the file")
+}
 
+## Unzip the file, load into R and make sure date format
+unzip("activity.zip")
+activity <- read.csv("activity.csv", header = T, sep = ",")
+activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
+```
 
-## What is mean total number of steps taken per day?
+Once data is loaded, sum steps for each day and discard the 'NA' values. The variable 'steps_day' holds the sum of steps for each day in the series. Function 'rowsum' discards all NA values in original 'activity' dataset.  
+Following the total steps per day histogram with mean and median.
 
+```{r, echo=TRUE}
+## Sum of steps per day while removing NA values
+steps_day <- rowsum(activity$steps, activity$date, reorder = F, na.rm = T)
+hist(steps_day, main = "Histogram of Steps per Day")
+abline(v = mean(steps_day), col = "red", lwd = 2)
+abline(v = median(steps_day), col = "blue", lwd = 2)
+legend("topright", c(paste("Mean    =   ", round(mean(steps_day))), paste("Median = ", median(steps_day))), 
+       col = c("red", "blue"), lwd = 2)
+```
 
+Now plot the time series: mean steps value per 5-minute intervals in each day.
+Need to remove the 'NA' values from original dataset, for that, I copied original dataset to an auxiliar set 'aux_activity' then split the auxiliar set in 5-minute intervals.
 
-## What is the average daily activity pattern?
+```{r, echo=TRUE}
+# Removing NA from steps in activity dataframe
+na_steps <- is.na(activity$steps)
+aux_activity <- activity[!na_steps, , ]
+interval_steps <- split(aux_activity$steps, aux_activity$interval)
+interval_mean_steps <- lapply(interval_steps, mean)
 
+## Identifying and plotting the Maximum value
+max_value <- max(unlist(lapply(interval_mean_steps, max)))
+plot(names(interval_mean_steps), interval_mean_steps, type = "l", main = "Mean steps per interval",
+     sub = paste("Maximum mean steps = ", max_value), xlab = "Time Intervals", ylab = "Mean steps")
+```
 
+Next is to identify the number of missing values or 'NA' values in 'steps'. The identification is based on 'na_steps' variable used in the previous "code chunk".
 
-## Imputing missing values
+```{r, echo=TRUE}
+print(paste("Number of 'NA' values in activity$steps is ", sum(na_steps)))
+```
 
+Next task is to replace the 'NA' values in 'steps' with the mean value for that day. To do this, I use the original dataset and copy again to an auxiliar variable to replace the 'NA' values by the mean of steps taken on the relative day. To get the mean steps per day, I use 'aux_activity' variable created in previous chunks.  
 
+```{r, echo=TRUE}
+# Using some variables created in previous chunks, create a variable with mean steps per day
+day_steps <- split(aux_activity$steps, aux_activity$date)
+day_mean_steps <- lapply(day_steps, mean)
+# Replacing the 'NA' values
+replace_activity <- activity
+i <- 1
+while(i <= nrow(replace_activity)) {
+      if(is.na(replace_activity$steps[i])) {
+            if(as.character(replace_activity$date[i]) %in% names(day_mean_steps)) {
+                  replace_activity$steps[i] <- day_mean_steps[grep(as.character(replace_activity$date[i]), names(day_mean_steps))]
+            } 
+            replace_activity$steps[i] <- 0
+      }
+      i <- i + 1
+}
+hist(replace_activity$steps, main = "Histogram of Steps per Day - 'NA' replaced")
+abline(v = mean(replace_activity$steps), col = "red", lwd = 2)
+abline(v = median(replace_activity$steps), col = "blue", lwd = 2)
+legend("topright", c(paste("Mean    =   ", round(mean(replace_activity$steps))),
+                     paste("Median = ", median(replace_activity$steps))), 
+       col = c("red", "blue"), lwd = 2)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+The histograms are different when removing 'NA' values and replacing 'NA' by the mean number of steps per day.
+
+Next, adding the Week day in the activity list and plotting steps per Weekdays and Weekends
+```{r, echo=TRUE}
+replace_activity["weekday"] <- NA
+replace_activity$weekday <- weekdays(as.Date(replace_activity$date), T)
+act_weekdays <- subset(replace_activity, replace_activity$weekday %in% c("Mon", "Tue", "Wed", "Thu", "Fri"))
+act_weekends <- subset(replace_activity, replace_activity$weekday %in% c("Sat", "Sun"))
+interval_wd <- split(act_weekdays$steps, act_weekdays$interval)
+interval_we <- split(act_weekends$steps, act_weekends$interval)
+mean_wd <- lapply(interval_wd, mean)
+mean_we <- lapply(interval_we, mean)
+par(mfrow = c(2,1))
+plot(names(mean_wd), mean_wd, type = "l")
+plot(names(mean_we), mean_wd, type = "l")
+```
+
