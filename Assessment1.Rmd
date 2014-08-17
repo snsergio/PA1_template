@@ -68,7 +68,7 @@ day_mean_steps <- lapply(day_steps, mean)
 # Replacing the 'NA' values
 replace_activity <- activity
 i <- 1
-for(i in nrow(replace_activity)) {
+while(i <= nrow(replace_activity)) {
       if(is.na(replace_activity$steps[i])) {
             if(as.character(replace_activity$date[i]) %in% names(day_mean_steps)) {
                   replace_activity$steps[i] <- day_mean_steps[grep(as.character(replace_activity$date[i]), names(day_mean_steps))]
@@ -91,16 +91,12 @@ Next, adding the Week day in the activity list and plotting steps per Weekdays a
 ```{r, echo=TRUE}
 replace_activity["weekday"] <- NA
 replace_activity$weekday <- weekdays(as.Date(replace_activity$date), T)
-
 act_weekdays <- subset(replace_activity, replace_activity$weekday %in% c("Mon", "Tue", "Wed", "Thu", "Fri"))
 act_weekends <- subset(replace_activity, replace_activity$weekday %in% c("Sat", "Sun"))
-
 interval_wd <- split(act_weekdays$steps, act_weekdays$interval)
 interval_we <- split(act_weekends$steps, act_weekends$interval)
-
 mean_wd <- lapply(interval_wd, mean)
 mean_we <- lapply(interval_we, mean)
-
 par(mfrow = c(2,1))
 plot(names(mean_wd), mean_wd, type = "l")
 plot(names(mean_we), mean_wd, type = "l")
